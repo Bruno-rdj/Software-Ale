@@ -1,29 +1,17 @@
 #!/bin/bash
 
-# Script de instalação do TechNova Solutions Website
-# Autor: Bruno Rocha Rozadas de Jesus
-# Data: 2024
-
-set -e
-
 echo "=========================================="
 echo "TechNova Solutions - Instalação do Site"
 echo "=========================================="
 echo ""
 
-# Verificar se está rodando como root
-if [ "$EUID" -ne 0 ]; then 
-    echo "Por favor, execute como root (use sudo)"
-    exit 1
-fi
-
 # Atualizar repositórios
 echo "[1/7] Atualizando repositórios..."
-apt-get update -qq
+apk update
 
 # Instalar Nginx
 echo "[2/7] Instalando Nginx..."
-apt-get install -y nginx
+apk add nginx
 
 # Criar diretório para logs personalizados
 echo "[3/7] Criando diretórios de logs..."
@@ -43,32 +31,26 @@ cp -r "$PROJECT_DIR/website"/* /var/www/technova/
 
 # Configurar permissões corretas
 echo "[6/7] Configurando permissões..."
-chown -R www-data:www-data /var/www/technova
+chown -R nginx:nginx /var/www/technova
 chmod -R 755 /var/www/technova
 find /var/www/technova -type f -exec chmod 644 {} \;
 
 # Configurar Nginx
 echo "[7/7] Configurando Nginx..."
-cp "$PROJECT_DIR/nginx/site.conf" /etc/nginx/sites-available/technova
-ln -sf /etc/nginx/sites-available/technova /etc/nginx/sites-enabled/technova
+cp "$PROJECT_DIR/nginx/site.conf" /etc/nginx/http.d/technova.conf
 
-# Remover configuração padrão se existir
-if [ -f /etc/nginx/sites-enabled/default ]; then
-    rm /etc/nginx/sites-enabled/default
-fi
+# Ajustar usuário no nginx.conf
+sed -i 's/user www-data;/user nginx;/' /etc/nginx/nginx.conf 2>/dev/null || true
 
 # Testar configuração do Nginx
 echo ""
 echo "Testando configuração do Nginx..."
 nginx -t
 
-# Habilitar Nginx para iniciar no boot
-echo "Habilitando Nginx no boot..."
-systemctl enable nginx
-
-# Reiniciar Nginx
-echo "Reiniciando Nginx..."
-systemctl restart nginx
+# Iniciar Nginx
+echo "Iniciando Nginx..."
+rc-service nginx start
+rc-update add nginx default
 
 echo ""
 echo "=========================================="
@@ -76,9 +58,4 @@ echo "Instalação concluída com sucesso!"
 echo "=========================================="
 echo ""
 echo "Acesse o site em: http://localhost"
-echo ""
-echo "Comandos úteis:"
-echo "  - Status: sudo systemctl status nginx"
-echo "  - Logs de acesso: sudo tail -f /var/log/nginx/technova/access.log"
-echo "  - Logs de erro: sudo tail -f /var/log/nginx/technova/error.log"
 echo ""

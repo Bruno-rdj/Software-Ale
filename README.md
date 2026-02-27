@@ -19,12 +19,12 @@
 ### Instalação
 ```bash
 # Clone o repositório
-git clone [URL_DO_SEU_REPO]
-cd TF01
+git clone https://github.com/Bruno-rdj/Software-Ale.git
+cd Software-Ale
 
 # Execute o script de instalação
 chmod +x scripts/install.sh
-./scripts/install.sh
+sudo ./scripts/install.sh
 ```
 
 ## Acesso
